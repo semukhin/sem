@@ -1,0 +1,192 @@
+.hero {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    padding: var(--spacing-2xl) 0;
+    text-align: center;
+}
+
+.hero h1 {
+    color: white;
+    margin-bottom: var(--spacing-sm);
+}
+
+.hero p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.donationContent {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.donationContent>h2 {
+    text-align: center;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.donationContent>p {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-text-light);
+}
+
+.donationMethod {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: var(--spacing-xl);
+}
+
+.donationMethod h3 {
+    color: var(--color-primary-dark);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-accent);
+}
+
+.zelleInfo {
+    margin-top: var(--spacing-lg);
+}
+
+.zelleField {
+    margin-bottom: var(--spacing-md);
+}
+
+.zelleField label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+}
+
+.copyField {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-background-alt);
+    border-radius: var(--border-radius);
+}
+
+.copyField span {
+    flex: 1;
+    color: var(--color-text);
+}
+
+.copyBtn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.copyBtn:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.qrCode {
+    margin-top: var(--spacing-lg);
+    text-align: center;
+}
+
+.qrPlaceholder {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.qrPlaceholder p {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.qrPlaceholder small {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.methodCard {
+    background: var(--color-background-alt);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+}
+
+.methodCard h4 {
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.methodCard p {
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text);
+}
+
+.methodCard a {
+    color: var(--color-primary);
+}
+
+.sectionTitle {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.impactGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.impactCard {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.impactCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.impactNumber {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-sm);
+}
+
+.impactCard p {
+    color: var(--color-text-light);
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .impactGrid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .impactNumber {
+        font-size: 2rem;
+    }
+}
