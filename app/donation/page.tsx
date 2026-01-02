@@ -7,11 +7,20 @@ import { Copy, Check, Heart, Building2, CreditCard, Mail } from 'lucide-react';
 
 export default function DonationPage() {
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [activeImpactCard, setActiveImpactCard] = useState<number | null>(null);
 
     const copyToClipboard = (text: string, field: string) => {
         navigator.clipboard.writeText(text);
         setCopiedField(field);
         setTimeout(() => setCopiedField(null), 2000);
+    };
+
+    const handleImpactClick = (amount: number) => {
+        navigator.clipboard.writeText('slavicemigrantsministry@gmail.com');
+        setActiveImpactCard(amount);
+        setTimeout(() => setActiveImpactCard(null), 3000);
+        // Open Zelle website in a new tab
+        window.open('https://www.zellepay.com', '_blank', 'noopener,noreferrer');
     };
 
     return (
@@ -84,12 +93,12 @@ export default function DonationPage() {
                                     <div className="group bg-muted/50 p-4 rounded-lg flex items-center justify-between hover:bg-muted transition-colors">
                                         <div className="overflow-hidden">
                                             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Email</p>
-                                            <p className="font-medium text-lg truncate">donations@slavicemigrantsministry.org</p>
+                                            <p className="font-medium text-lg truncate">slavicemigrantsministry@gmail.com</p>
                                         </div>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => copyToClipboard('donations@slavicemigrantsministry.org', 'email')}
+                                            onClick={() => copyToClipboard('slavicemigrantsministry@gmail.com', 'email')}
                                             className="text-primary hover:bg-primary/10 flex-shrink-0 ml-2"
                                         >
                                             {copiedField === 'email' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
@@ -145,9 +154,9 @@ export default function DonationPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <p className="text-muted-foreground mb-4">Contact us for wire transfer details and instructions.</p>
-                                    <a href="mailto:donations@slavicemigrantsministry.org" className="text-primary font-medium hover:underline flex items-center gap-2">
+                                    <a href="mailto:slavicemigrantsministry@gmail.com" className="text-primary font-medium hover:underline flex items-center gap-2">
                                         <Mail className="w-4 h-4" />
-                                        donations@slavicemigrantsministry.org
+                                        slavicemigrantsministry@gmail.com
                                     </a>
                                 </CardContent>
                             </Card>
@@ -167,13 +176,31 @@ export default function DonationPage() {
                             { amount: 250, text: "Supports employment workshop for 10 people" },
                             { amount: 500, text: "Funds a month of community programs" }
                         ].map((item, index) => (
-                            <Card key={index} className="border-none shadow-lg text-center hover:-translate-y-2 transition-transform duration-300">
+                            <Card
+                                key={index}
+                                className="border-none shadow-lg text-center hover:-translate-y-2 transition-transform duration-300 cursor-pointer relative overflow-hidden group"
+                                onClick={() => handleImpactClick(item.amount)}
+                            >
+                                {activeImpactCard === item.amount && (
+                                    <div className="absolute inset-0 bg-primary/95 flex flex-col items-center justify-center text-primary-foreground z-20 animate-in fade-in zoom-in duration-300">
+                                        <div className="bg-white/20 p-3 rounded-full mb-3">
+                                            <Check className="w-8 h-8" />
+                                        </div>
+                                        <p className="font-bold text-xl mb-1">Email Copied!</p>
+                                        <p className="text-sm opacity-90 px-6 leading-snug">
+                                            Open your banking app to send Zelle using our email.
+                                        </p>
+                                    </div>
+                                )}
                                 <CardContent className="pt-8 pb-8 px-6 space-y-4">
-                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary font-bold text-2xl mb-2 shadow-inner">
+                                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 text-primary font-bold text-2xl mb-2 shadow-inner group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
                                         ${item.amount}
                                     </div>
-                                    <p className="text-muted-foreground font-medium min-h-[3rem]">
+                                    <p className="text-muted-foreground font-medium min-h-[3rem] group-hover:text-foreground transition-colors">
                                         {item.text}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground/50 uppercase tracking-widest font-semibold pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Click to Donate
                                     </p>
                                 </CardContent>
                             </Card>

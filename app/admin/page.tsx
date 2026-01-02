@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProgramsManager from './ProgramsManager';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Plus, Trash2, Edit, Save, ArrowLeft, LogOut, Loader2, Image as ImageIcon, ExternalLink, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface NewsPost {
     id: string;
@@ -37,13 +41,11 @@ export default function AdminPage() {
     const [programs, setPrograms] = useState<Program[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [currentPost, setCurrentPost] = useState<NewsPost | null>(null);
-    const [isEditingProgram, setIsEditingProgram] = useState(false);
-    const [currentProgram, setCurrentProgram] = useState<Program | null>(null);
     const [mounted, setMounted] = useState(false);
 
 
     // Simple authentication (in production, use proper auth)
-    const ADMIN_PASSWORD = 'admin123'; // Change this!
+    const ADMIN_PASSWORD = 'admin123';
 
     useEffect(() => {
         setMounted(true);
@@ -74,7 +76,7 @@ export default function AdminPage() {
             setPosts(newPosts);
         } catch (error) {
             if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                alert('Ошибка: Превышен лимит хранилища!\n\nИзображения автоматически сжимаются, но у вас слишком много постов.\n\nРекомендации:\n- Удалите старые посты\n- Используйте меньше изображений\n- Используйте изображения меньшего размера');
+                alert('Ошибка: Превышен лимит хранилища! Уменьшите размер изображений.');
             } else {
                 alert('Ошибка при сохранении поста');
             }
@@ -153,8 +155,6 @@ export default function AdminPage() {
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-
-                    // Resize if image is too large
                     const maxWidth = 1200;
                     const maxHeight = 1200;
 
@@ -170,11 +170,9 @@ export default function AdminPage() {
 
                     canvas.width = width;
                     canvas.height = height;
-
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
                         ctx.drawImage(img, 0, 0, width, height);
-                        // Compress to JPEG with 0.7 quality
                         const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
                         resolve(compressedDataUrl);
                     } else {
@@ -194,10 +192,7 @@ export default function AdminPage() {
         if (file && currentPost) {
             try {
                 const compressedImage = await compressImage(file);
-                setCurrentPost({
-                    ...currentPost,
-                    imageUrl: compressedImage,
-                });
+                setCurrentPost({ ...currentPost, imageUrl: compressedImage });
             } catch (error) {
                 console.error('Error compressing image:', error);
                 alert('Ошибка при загрузке изображения');
@@ -210,10 +205,7 @@ export default function AdminPage() {
         if (file && currentPost) {
             try {
                 const compressedImage = await compressImage(file);
-                setCurrentPost({
-                    ...currentPost,
-                    imageUrl2: compressedImage,
-                })
+                setCurrentPost({ ...currentPost, imageUrl2: compressedImage });
             } catch (error) {
                 console.error('Error compressing image:', error);
                 alert('Ошибка при загрузке изображения');
@@ -221,475 +213,260 @@ export default function AdminPage() {
         }
     };
 
-    // Program management functions
+    // Callback for ProgramsManager to update programs state
     const savePrograms = (newPrograms: Program[]) => {
         try {
             localStorage.setItem('semPrograms', JSON.stringify(newPrograms));
             setPrograms(newPrograms);
         } catch (error) {
             if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                alert('Ошибка: Превышен лимит хранилища!\n\nУдалите старые программы или уменьшите размер изображений.');
+                alert('Ошибка: Превышен лимит хранилища!');
             } else {
                 alert('Ошибка при сохранении программы');
             }
-            console.error('Error saving programs:', error);
-        }
-    };
-
-    const handleCreateNewProgram = () => {
-        setCurrentProgram({
-            id: Date.now().toString(),
-            title: '',
-            description: '',
-            imageUrl: '',
-            order: programs.length + 1,
-        });
-        setIsEditingProgram(true);
-    };
-
-    const handleEditProgram = (program: Program) => {
-        setCurrentProgram(program);
-        setIsEditingProgram(true);
-    };
-
-    const handleDeleteProgram = (id: string) => {
-        if (confirm('Вы уверены, что хотите удалить эту программу?')) {
-            const newPrograms = programs.filter(p => p.id !== id);
-            savePrograms(newPrograms);
-        }
-    };
-
-    const handleSaveProgram = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!currentProgram) return;
-
-        const existingIndex = programs.findIndex(p => p.id === currentProgram.id);
-        let newPrograms;
-
-        if (existingIndex >= 0) {
-            newPrograms = [...programs];
-            newPrograms[existingIndex] = currentProgram;
-        } else {
-            newPrograms = [...programs, currentProgram];
-        }
-
-        // Sort by order
-        newPrograms.sort((a, b) => a.order - b.order);
-
-        savePrograms(newPrograms);
-        setIsEditingProgram(false);
-        setCurrentProgram(null);
-    };
-
-    const handleProgramImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && currentProgram) {
-            try {
-                const compressedImage = await compressImage(file);
-                setCurrentProgram({
-                    ...currentProgram,
-                    imageUrl: compressedImage,
-                });
-            } catch (error) {
-                console.error('Error compressing image:', error);
-                alert('Ошибка при загрузке изображения');
-            }
         }
     };
 
 
-    // Prevent hydration mismatch
     if (!mounted) {
         return (
-            <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="container">
-                    <p>Loading...</p>
-                </div>
-            </main>
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
         );
     }
 
     if (!isAuthenticated) {
         return (
-            <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-background-alt)' }}>
-                <div style={{ background: 'white', padding: 'var(--spacing-2xl)', borderRadius: 'var(--border-radius)', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
-                    <h1 style={{ color: 'var(--color-primary)', marginBottom: 'var(--spacing-lg)' }}>Админ-панель SEM</h1>
-                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                        <input
-                            type="password"
-                            placeholder="Введите пароль"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            style={{ padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                        />
-                        <button type="submit" className="btn btn-primary">
-                            Войти
-                        </button>
-                    </form>
-                </div>
+            <main className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
+                <Card className="w-full max-w-md shadow-lg">
+                    <CardHeader className="text-center">
+                        <CardTitle className="text-2xl font-bold text-primary">Admin Panel</CardTitle>
+                        <CardDescription>Enter your credentials to access the dashboard</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
+                                    Password
+                                </label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="Enter password"
+                                />
+                            </div>
+                            <Button type="submit" className="w-full">
+                                Login
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
             </main>
         );
     }
 
+    const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    const textareaClass = "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
     if (isEditing && currentPost) {
         return (
-            <main style={{ padding: 'var(--spacing-xl) 0', minHeight: '80vh' }}>
-                <div className="container">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)', paddingBottom: 'var(--spacing-md)', borderBottom: '2px solid var(--color-border)' }}>
-                        <h1 style={{ margin: 0 }}>{currentPost.id && posts.find(p => p.id === currentPost.id) ? 'Редактировать пост' : 'Создать новый пост'}</h1>
-                        <button
-                            onClick={() => {
-                                setIsEditing(false);
-                                setCurrentPost(null);
-                            }}
-                            className="btn btn-primary"
-                        >
-                            ← Назад к списку
-                        </button>
-                    </div>
-
-                    <form onSubmit={handleSave} style={{ background: 'white', padding: 'var(--spacing-xl)', borderRadius: 'var(--border-radius)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Заголовок *</label>
-                            <input
-                                type="text"
-                                value={currentPost.title}
-                                onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })}
-                                required
-                                placeholder="Введите заголовок новости"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Дата публикации *</label>
-                            <input
-                                type="text"
-                                value={currentPost.date}
-                                onChange={(e) => {
-                                    const inputValue = e.target.value;
-                                    setCurrentPost({ ...currentPost, date: inputValue });
-                                }}
-                                onBlur={(e) => {
-                                    // Try to parse and format the date when user leaves the field
-                                    const inputValue = e.target.value;
-                                    try {
-                                        const parsedDate = new Date(inputValue);
-                                        if (!isNaN(parsedDate.getTime())) {
-                                            const formattedDate = parsedDate.toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            });
-                                            setCurrentPost({ ...currentPost, date: formattedDate });
-                                        }
-                                    } catch (error) {
-                                        // Keep the original value if parsing fails
-                                    }
-                                }}
-                                required
-                                placeholder="MM/DD/YYYY или August 11, 2025"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Введите дату в формате MM/DD/YYYY (например: 08/11/2025) или полный формат
-                            </small>
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Slug (URL) *</label>
-                            <input
-                                type="text"
-                                value={currentPost.slug}
-                                onChange={(e) => setCurrentPost({ ...currentPost, slug: e.target.value })}
-                                placeholder="url-friendly-name (оставьте пустым для автогенерации)"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Будет использоваться в URL: /news/{currentPost.slug || 'auto-generated'}
-                            </small>
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Краткое описание *</label>
-                            <textarea
-                                value={currentPost.excerpt}
-                                onChange={(e) => setCurrentPost({ ...currentPost, excerpt: e.target.value })}
-                                required
-                                rows={3}
-                                placeholder="Краткое описание для карточки новости"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical' }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Полный текст *</label>
-                            <textarea
-                                value={currentPost.content}
-                                onChange={(e) => setCurrentPost({ ...currentPost, content: e.target.value })}
-                                required
-                                rows={10}
-                                placeholder="Полный текст новости (поддерживается HTML)"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Можно использовать HTML теги: &lt;p&gt;, &lt;h3&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;
-                            </small>
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Изображение 1 (до текста)</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                style={{ width: '100%', padding: 'var(--spacing-sm)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Изображения автоматически сжимаются для экономии места
-                            </small>
-                            {currentPost.imageUrl && (
-                                <div style={{ marginTop: 'var(--spacing-md)' }}>
-                                    <img src={currentPost.imageUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--border-radius)', display: 'block' }} />
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrentPost({ ...currentPost, imageUrl: '' })}
-                                        style={{ marginTop: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', background: '#e74c3c', color: 'white', border: 'none', borderRadius: 'var(--border-radius)', cursor: 'pointer' }}
-                                    >
-                                        Удалить изображение
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Изображение 2 (после текста)</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImage2Upload}
-                                style={{ width: '100%', padding: 'var(--spacing-sm)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Изображения автоматически сжимаются для экономии места
-                            </small>
-                            {currentPost.imageUrl2 && (
-                                <div style={{ marginTop: 'var(--spacing-md)' }}>
-                                    <img src={currentPost.imageUrl2} alt="Preview 2" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--border-radius)', display: 'block' }} />
-                                    <button
-                                        type="button"
-                                        onClick={() => setCurrentPost({ ...currentPost, imageUrl2: '' })}
-                                        style={{ marginTop: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', background: '#e74c3c', color: 'white', border: 'none', borderRadius: 'var(--border-radius)', cursor: 'pointer' }}
-                                    >
-                                        Удалить изображение
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Видео URL (YouTube, Vimeo)</label>
-                            <input
-                                type="url"
-                                value={currentPost.videoUrl}
-                                onChange={(e) => setCurrentPost({ ...currentPost, videoUrl: e.target.value })}
-                                placeholder="https://www.youtube.com/watch?v=..."
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Ссылка на внешний источник</label>
-                            <input
-                                type="url"
-                                value={currentPost.externalLink}
-                                onChange={(e) => setCurrentPost({ ...currentPost, externalLink: e.target.value })}
-                                placeholder="https://example.com/document.pdf"
-                                style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                            />
-                            <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                                Ссылка на PDF, статью или другой внешний ресурс
-                            </small>
-
-                            {currentPost.externalLink && (
-                                <div style={{ marginTop: 'var(--spacing-md)', padding: 'var(--spacing-md)', background: 'var(--color-background-alt)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-border)' }}>
-                                    <p style={{ fontWeight: 600, marginBottom: 'var(--spacing-sm)', fontSize: '0.9rem' }}>Настройки превью ссылки:</p>
-
-                                    <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-                                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 'var(--spacing-xs)' }}>Заголовок превью</label>
-                                        <input
-                                            type="text"
-                                            value={currentPost.externalLinkTitle}
-                                            onChange={(e) => setCurrentPost({ ...currentPost, externalLinkTitle: e.target.value })}
-                                            placeholder="Название документа или статьи"
-                                            style={{ width: '100%', padding: 'var(--spacing-xs) var(--spacing-sm)', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '0.9rem' }}
-                                        />
-                                    </div>
-
-                                    <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-                                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 'var(--spacing-xs)' }}>Описание превью</label>
-                                        <textarea
-                                            value={currentPost.externalLinkDescription}
-                                            onChange={(e) => setCurrentPost({ ...currentPost, externalLinkDescription: e.target.value })}
-                                            rows={2}
-                                            placeholder="Краткое описание документа"
-                                            style={{ width: '100%', padding: 'var(--spacing-xs) var(--spacing-sm)', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '0.9rem', fontFamily: 'inherit', resize: 'vertical' }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 'var(--spacing-xs)' }}>URL изображения для превью</label>
-                                        <input
-                                            type="url"
-                                            value={currentPost.externalLinkImage}
-                                            onChange={(e) => setCurrentPost({ ...currentPost, externalLinkImage: e.target.value })}
-                                            placeholder="https://example.com/preview-image.jpg"
-                                            style={{ width: '100%', padding: 'var(--spacing-xs) var(--spacing-sm)', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '0.9rem' }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-xl)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--color-border)' }}>
-                            <button type="submit" className="btn btn-primary">
-                                Сохранить пост
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsEditing(false);
-                                    setCurrentPost(null);
-                                }}
-                                className="btn"
-                                style={{ background: '#ccc' }}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </form>
+            <main className="py-12 px-4 md:px-8 max-w-5xl mx-auto min-h-screen">
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        {posts.find(p => p.id === currentPost.id) ? 'Edit Post' : 'Create New Post'}
+                    </h1>
+                    <Button variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }}>
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                    </Button>
                 </div>
+
+                <Card className="shadow-lg">
+                    <CardContent className="p-6">
+                        <form onSubmit={handleSave} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Title *</label>
+                                <input type="text" value={currentPost.title} onChange={(e) => setCurrentPost({ ...currentPost, title: e.target.value })} required className={inputClass} placeholder="News Title" />
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Date *</label>
+                                    <input type="text" value={currentPost.date} onChange={(e) => setCurrentPost({ ...currentPost, date: e.target.value })} required className={inputClass} placeholder="MM/DD/YYYY" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Slug (URL)</label>
+                                    <input type="text" value={currentPost.slug} onChange={(e) => setCurrentPost({ ...currentPost, slug: e.target.value })} className={inputClass} placeholder="auto-generated" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Excerpt *</label>
+                                <textarea value={currentPost.excerpt} onChange={(e) => setCurrentPost({ ...currentPost, excerpt: e.target.value })} required rows={3} className={textareaClass} placeholder="Brief summary" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Content (HTML supported) *</label>
+                                <textarea value={currentPost.content} onChange={(e) => setCurrentPost({ ...currentPost, content: e.target.value })} required rows={10} className={textareaClass} placeholder="Full content..." />
+                            </div>
+
+                            {/* Images Section */}
+                            <div className="grid md:grid-cols-2 gap-6 p-4 bg-muted/30 rounded-lg">
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Header Image</label>
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} className={inputClass} />
+                                    {currentPost.imageUrl && (
+                                        <div className="relative group rounded-md overflow-hidden border">
+                                            <img src={currentPost.imageUrl} alt="Preview" className="w-full h-48 object-cover" />
+                                            <button type="button" onClick={() => setCurrentPost({ ...currentPost, imageUrl: '' })} className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Footer Image</label>
+                                    <input type="file" accept="image/*" onChange={handleImage2Upload} className={inputClass} />
+                                    {currentPost.imageUrl2 && (
+                                        <div className="relative group rounded-md overflow-hidden border">
+                                            <img src={currentPost.imageUrl2} alt="Preview 2" className="w-full h-48 object-cover" />
+                                            <button type="button" onClick={() => setCurrentPost({ ...currentPost, imageUrl2: '' })} className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* External Link Section */}
+                            <div className="space-y-4 p-4 border rounded-lg">
+                                <h3 className="text-sm font-semibold flex items-center gap-2"><ExternalLink className="w-4 h-4" /> External Resource (Optional)</h3>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">Link URL</label>
+                                    <input type="url" value={currentPost.externalLink} onChange={(e) => setCurrentPost({ ...currentPost, externalLink: e.target.value })} className={inputClass} placeholder="https://..." />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <Button type="submit" className="w-full md:w-auto px-8 gap-2"><Save className="w-4 h-4" /> Save Post</Button>
+                                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }} className="w-full md:w-auto">Cancel</Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
             </main>
         );
     }
 
     return (
-        <main style={{ padding: 'var(--spacing-xl) 0', minHeight: '80vh' }}>
-            <div className="container">
-                {/* Tab Navigation */}
-                <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-                    <div style={{ display: 'flex', gap: 'var(--spacing-sm)', borderBottom: '2px solid var(--color-border)', marginBottom: 'var(--spacing-lg)' }}>
-                        <button
-                            onClick={() => setActiveTab('news')}
-                            style={{
-                                padding: 'var(--spacing-md) var(--spacing-lg)',
-                                background: activeTab === 'news' ? 'var(--color-primary)' : 'transparent',
-                                color: activeTab === 'news' ? 'white' : 'var(--color-text)',
-                                border: 'none',
-                                borderBottom: activeTab === 'news' ? '3px solid var(--color-primary)' : '3px solid transparent',
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                                fontSize: '1rem',
-                                transition: 'all 0.3s ease',
-                            }}
-                        >
-                            📰 Новости
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('programs')}
-                            style={{
-                                padding: 'var(--spacing-md) var(--spacing-lg)',
-                                background: activeTab === 'programs' ? 'var(--color-primary)' : 'transparent',
-                                color: activeTab === 'programs' ? 'white' : 'var(--color-text)',
-                                border: 'none',
-                                borderBottom: activeTab === 'programs' ? '3px solid var(--color-primary)' : '3px solid transparent',
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                                fontSize: '1rem',
-                                transition: 'all 0.3s ease',
-                            }}
-                        >
-                            🎯 Программы
-                        </button>
-                    </div>
+        <main className="py-12 px-4 md:px-8 max-w-6xl mx-auto min-h-screen">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
+                    <p className="text-muted-foreground">Manage your website content</p>
+                </div>
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => router.push('/')}>
+                        Visit Website <ExternalLink className="w-4 h-4 ml-2" />
+                    </Button>
+                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setIsAuthenticated(false)}>
+                        <LogOut className="w-4 h-4 mr-2" /> Logout
+                    </Button>
+                </div>
+            </div>
 
+            {/* Custom Tabs Implementation using Tailwind */}
+            <div className="space-y-6">
+                <div className="flex border-b">
                     <button
-                        onClick={() => router.push('/')}
-                        className="btn btn-primary"
-                        style={{ marginBottom: 'var(--spacing-md)' }}
+                        className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'news' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        onClick={() => setActiveTab('news')}
                     >
-                        Перейти на сайт
+                        News Management
+                    </button>
+                    <button
+                        className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'programs' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                        onClick={() => setActiveTab('programs')}
+                    >
+                        Programs Management
                     </button>
                 </div>
 
-                {/* News Tab */}
-                {activeTab === 'news' && (
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)', paddingBottom: 'var(--spacing-md)', borderBottom: '2px solid var(--color-border)' }}>
-                            <h2 style={{ margin: 0 }}>Управление новостями</h2>
-                            <button onClick={handleCreateNew} className="btn btn-accent">
-                                + Создать новость
-                            </button>
-                        </div>
-
-                        {posts.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: 'var(--spacing-3xl)', background: 'var(--color-background-alt)', borderRadius: 'var(--border-radius)' }}>
-                                <p style={{ fontSize: '1.2rem', color: 'var(--color-text-light)' }}>Новостей пока нет. Создайте первую!</p>
+                <div className="min-h-[500px]">
+                    {activeTab === 'news' && (
+                        <div className="space-y-6">
+                            <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold">News Posts ({posts.length})</h2>
+                                <Button onClick={handleCreateNew} className="gap-2">
+                                    <Plus className="w-4 h-4" /> Create Post
+                                </Button>
                             </div>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                                {posts.map((post) => (
-                                    <div key={post.id} style={{ background: 'white', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', padding: 'var(--spacing-md)', display: 'grid', gridTemplateColumns: post.imageUrl ? 'auto 1fr auto' : '1fr auto', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                                        {post.imageUrl && (
-                                            <div style={{ width: '100px', height: '100px', borderRadius: 'var(--border-radius)', overflow: 'hidden' }}>
-                                                <img src={post.imageUrl} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+                            {posts.length === 0 ? (
+                                <Card className="border-dashed">
+                                    <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                                        <div className="bg-muted p-4 rounded-full mb-4">
+                                            <RefreshCw className="w-8 h-8 text-muted-foreground opacity-50" />
+                                        </div>
+                                        <h3 className="text-xl font-semibold mb-2">No News Posts Yet</h3>
+                                        <p className="text-muted-foreground max-w-sm mb-6">Start by creating your first news post to share updates with your community.</p>
+                                        <Button onClick={handleCreateNew}>Create Post</Button>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <div className="grid gap-4">
+                                    {posts.map((post) => (
+                                        <Card key={post.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                                            <div className="flex flex-col sm:flex-row">
+                                                {post.imageUrl && (
+                                                    <div className="sm:w-48 h-48 sm:h-auto overflow-hidden shrink-0 relative">
+                                                        <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+                                                    </div>
+                                                )}
+                                                <CardContent className="flex-1 p-6 flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <h3 className="text-xl font-bold line-clamp-1">{post.title}</h3>
+                                                            <Badge variant="outline">{post.date}</Badge>
+                                                        </div>
+                                                        <p className="text-muted-foreground line-clamp-2 mb-4">{post.excerpt}</p>
+                                                    </div>
+                                                    <div className="flex justify-end gap-3 pt-4 border-t mt-2">
+                                                        <Button variant="outline" size="sm" onClick={() => handleEdit(post)} className="gap-2">
+                                                            <Edit className="w-4 h-4" /> Edit
+                                                        </Button>
+                                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(post.id)} className="gap-2">
+                                                            <Trash2 className="w-4 h-4" /> Delete
+                                                        </Button>
+                                                    </div>
+                                                </CardContent>
                                             </div>
-                                        )}
-                                        <div>
-                                            <h3 style={{ marginBottom: 'var(--spacing-xs)', fontSize: '1.2rem' }}>{post.title}</h3>
-                                            <p style={{ color: 'var(--color-text-light)', fontSize: '0.9rem', marginBottom: 'var(--spacing-xs)' }}>{post.date}</p>
-                                            <p style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>{post.excerpt}</p>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-                                            <button
-                                                onClick={() => handleEdit(post)}
-                                                className="btn btn-primary"
-                                            >
-                                                Редактировать
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(post.id)}
-                                                className="btn"
-                                                style={{ background: '#e74c3c', color: 'white' }}
-                                            >
-                                                Удалить
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                {/* Programs Tab */}
-                {activeTab === 'programs' && (
-                    <ProgramsManager
-                        programs={programs}
-                        onSave={savePrograms}
-                        onImageUpload={(e, program, setProgram) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                                compressImage(file).then(compressedImage => {
-                                    setProgram({ ...program, imageUrl: compressedImage });
-                                }).catch(error => {
-                                    console.error('Error compressing image:', error);
-                                    alert('Ошибка при загрузке изображения');
-                                });
-                            }
-                        }}
-                    />
-                )}
+                    {activeTab === 'programs' && (
+                        <div className="p-4 bg-background rounded-lg border shadow-sm">
+                            <ProgramsManager
+                                programs={programs}
+                                onSave={savePrograms}
+                                onImageUpload={(e, program, setProgram) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        compressImage(file).then(compressedImage => {
+                                            setProgram({ ...program, imageUrl: compressedImage });
+                                        }).catch(error => {
+                                            console.error('Error compressing image:', error);
+                                            alert('Error uploading image');
+                                        });
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </main>
     );

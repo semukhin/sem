@@ -44,10 +44,10 @@ export default function Footer() {
                             <h3 className="text-sm font-semibold">Contact</h3>
                             <div className="space-y-2">
                                 <a
-                                    href="mailto:info@slavicemigrantsministry.org"
+                                    href="mailto:slavicemigrantsministry@gmail.com"
                                     className="text-sm text-muted-foreground hover:text-foreground transition-colors block"
                                 >
-                                    info@slavicemigrantsministry.org
+                                    slavicemigrantsministry@gmail.com
                                 </a>
                                 <Link
                                     href="/contact"

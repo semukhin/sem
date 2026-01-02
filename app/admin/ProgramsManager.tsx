@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+// Imports removed because components do not exist. Using native HTML elements with utility classes.
+import { Edit, Trash2, Save, Plus, ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Program {
     id: string;
@@ -37,7 +42,7 @@ export default function ProgramsManager({ programs, onSave, onImageUpload }: Pro
     };
 
     const handleDelete = (id: string) => {
-        if (confirm('Вы уверены, что хотите удалить эту программу?')) {
+        if (confirm('Are you sure you want to delete this program?')) {
             const newPrograms = programs.filter(p => p.id !== id);
             onSave(newPrograms);
         }
@@ -57,7 +62,6 @@ export default function ProgramsManager({ programs, onSave, onImageUpload }: Pro
             newPrograms = [...programs, currentProgram];
         }
 
-        // Sort by order
         newPrograms.sort((a, b) => a.order - b.order);
 
         onSave(newPrograms);
@@ -65,157 +69,143 @@ export default function ProgramsManager({ programs, onSave, onImageUpload }: Pro
         setCurrentProgram(null);
     };
 
+    const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    const textareaClass = "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+
     if (isEditing && currentProgram) {
         return (
-            <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)', paddingBottom: 'var(--spacing-md)', borderBottom: '2px solid var(--color-border)' }}>
-                    <h2 style={{ margin: 0 }}>{currentProgram.id && programs.find(p => p.id === currentProgram.id) ? 'Редактировать программу' : 'Создать новую программу'}</h2>
-                    <button
-                        onClick={() => {
-                            setIsEditing(false);
-                            setCurrentProgram(null);
-                        }}
-                        className="btn btn-primary"
-                    >
-                        ← Назад к списку
-                    </button>
+            <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between border-b pb-4">
+                    <h2 className="text-2xl font-bold tracking-tight">
+                        {programs.find(p => p.id === currentProgram.id) ? 'Edit Program' : 'Create New Program'}
+                    </h2>
+                    <Button variant="ghost" onClick={() => { setIsEditing(false); setCurrentProgram(null); }}>
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back to List
+                    </Button>
                 </div>
 
-                <form onSubmit={handleSave} style={{ background: 'white', padding: 'var(--spacing-xl)', borderRadius: 'var(--border-radius)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Заголовок программы *</label>
-                        <input
-                            type="text"
-                            value={currentProgram.title}
-                            onChange={(e) => setCurrentProgram({ ...currentProgram, title: e.target.value })}
-                            required
-                            placeholder="Например: Relaxium"
-                            style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                        />
-                    </div>
-
-                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Порядок отображения *</label>
-                        <input
-                            type="number"
-                            value={currentProgram.order}
-                            onChange={(e) => setCurrentProgram({ ...currentProgram, order: parseInt(e.target.value) || 1 })}
-                            required
-                            min="1"
-                            placeholder="1"
-                            style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem' }}
-                        />
-                        <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                            Программы будут отображаться в порядке возрастания этого числа
-                        </small>
-                    </div>
-
-                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Описание программы *</label>
-                        <textarea
-                            value={currentProgram.description}
-                            onChange={(e) => setCurrentProgram({ ...currentProgram, description: e.target.value })}
-                            required
-                            rows={8}
-                            placeholder="Подробное описание программы (поддерживается HTML)"
-                            style={{ width: '100%', padding: 'var(--spacing-sm) var(--spacing-md)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical' }}
-                        />
-                        <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                            Можно использовать HTML теги: &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;
-                        </small>
-                    </div>
-
-                    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                        <label style={{ display: 'block', fontWeight: 600, marginBottom: 'var(--spacing-xs)' }}>Изображение программы</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => onImageUpload(e, currentProgram, setCurrentProgram)}
-                            style={{ width: '100%', padding: 'var(--spacing-sm)', border: '2px solid var(--color-border)', borderRadius: 'var(--border-radius)' }}
-                        />
-                        <small style={{ display: 'block', marginTop: 'var(--spacing-xs)', color: 'var(--color-text-light)', fontSize: '0.85rem' }}>
-                            Изображения автоматически сжимаются для экономии места
-                        </small>
-                        {currentProgram.imageUrl && (
-                            <div style={{ marginTop: 'var(--spacing-md)' }}>
-                                <img src={currentProgram.imageUrl} alt="Preview" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--border-radius)', display: 'block' }} />
-                                <button
-                                    type="button"
-                                    onClick={() => setCurrentProgram({ ...currentProgram, imageUrl: '' })}
-                                    style={{ marginTop: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', background: '#e74c3c', color: 'white', border: 'none', borderRadius: 'var(--border-radius)', cursor: 'pointer' }}
-                                >
-                                    Удалить изображение
-                                </button>
+                <Card className="shadow-sm">
+                    <CardContent className="p-6">
+                        <form onSubmit={handleSave} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Program Title *</label>
+                                <input
+                                    type="text"
+                                    value={currentProgram.title}
+                                    onChange={(e) => setCurrentProgram({ ...currentProgram, title: e.target.value })}
+                                    required
+                                    placeholder="e.g. Relaxium"
+                                    className={inputClass}
+                                />
                             </div>
-                        )}
-                    </div>
 
-                    <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-xl)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--color-border)' }}>
-                        <button type="submit" className="btn btn-primary">
-                            Сохранить программу
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsEditing(false);
-                                setCurrentProgram(null);
-                            }}
-                            className="btn"
-                            style={{ background: '#ccc' }}
-                        >
-                            Отмена
-                        </button>
-                    </div>
-                </form>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Display Order *</label>
+                                <input
+                                    type="number"
+                                    value={currentProgram.order}
+                                    onChange={(e) => setCurrentProgram({ ...currentProgram, order: parseInt(e.target.value) || 1 })}
+                                    required
+                                    min="1"
+                                    className={inputClass}
+                                />
+                                <p className="text-xs text-muted-foreground">Programs are sorted by this number (ascending).</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Description (HTML supported) *</label>
+                                <textarea
+                                    value={currentProgram.description}
+                                    onChange={(e) => setCurrentProgram({ ...currentProgram, description: e.target.value })}
+                                    required
+                                    rows={8}
+                                    placeholder="Full program description..."
+                                    className={textareaClass}
+                                />
+                            </div>
+
+                            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+                                <label className="text-sm font-medium flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Program Image</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => onImageUpload(e, currentProgram, setCurrentProgram)}
+                                    className={inputClass}
+                                />
+                                {currentProgram.imageUrl && (
+                                    <div className="relative group rounded-md overflow-hidden border w-full max-w-md">
+                                        <img src={currentProgram.imageUrl} alt="Preview" className="w-full h-64 object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCurrentProgram({ ...currentProgram, imageUrl: '' })}
+                                            className="absolute top-2 right-2 bg-destructive text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <Button type="submit" className="gap-2"><Save className="w-4 h-4" /> Save Program</Button>
+                                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setCurrentProgram(null); }}>Cancel</Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
             </div>
         );
     }
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-xl)', paddingBottom: 'var(--spacing-md)', borderBottom: '2px solid var(--color-border)' }}>
-                <h2 style={{ margin: 0 }}>Управление программами</h2>
-                <button onClick={handleCreateNew} className="btn btn-accent">
-                    + Создать программу
-                </button>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg">
+                <h2 className="text-xl font-semibold">Programs ({programs.length})</h2>
+                <Button onClick={handleCreateNew} className="gap-2">
+                    <Plus className="w-4 h-4" /> Create Program
+                </Button>
             </div>
 
             {programs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 'var(--spacing-3xl)', background: 'var(--color-background-alt)', borderRadius: 'var(--border-radius)' }}>
-                    <p style={{ fontSize: '1.2rem', color: 'var(--color-text-light)' }}>Программ пока нет. Создайте первую!</p>
-                </div>
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-                    {programs.sort((a, b) => a.order - b.order).map((program) => (
-                        <div key={program.id} style={{ background: 'white', border: '1px solid var(--color-border)', borderRadius: 'var(--border-radius)', padding: 'var(--spacing-md)', display: 'grid', gridTemplateColumns: program.imageUrl ? 'auto 1fr auto' : '1fr auto', gap: 'var(--spacing-md)', alignItems: 'center' }}>
-                            {program.imageUrl && (
-                                <div style={{ width: '100px', height: '100px', borderRadius: 'var(--border-radius)', overflow: 'hidden' }}>
-                                    <img src={program.imageUrl} alt={program.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                            )}
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-xs)' }}>
-                                    <span style={{ background: 'var(--color-primary)', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>#{program.order}</span>
-                                    <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{program.title}</h3>
-                                </div>
-                                <p style={{ fontSize: '0.95rem', lineHeight: 1.5, margin: 0 }} dangerouslySetInnerHTML={{ __html: program.description.substring(0, 150) + (program.description.length > 150 ? '...' : '') }} />
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-                                <button
-                                    onClick={() => handleEdit(program)}
-                                    className="btn btn-primary"
-                                >
-                                    Редактировать
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(program.id)}
-                                    className="btn"
-                                    style={{ background: '#e74c3c', color: 'white' }}
-                                >
-                                    Удалить
-                                </button>
-                            </div>
+                <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="bg-muted p-4 rounded-full mb-4">
+                            <RefreshCw className="w-8 h-8 text-muted-foreground opacity-50" />
                         </div>
+                        <h3 className="text-xl font-semibold mb-2">No Programs Yet</h3>
+                        <p className="text-muted-foreground max-w-sm mb-6">Create programs content for your visitors.</p>
+                        <Button onClick={handleCreateNew}>Create Program</Button>
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="grid gap-4">
+                    {programs.sort((a, b) => a.order - b.order).map((program) => (
+                        <Card key={program.id} className="overflow-hidden hover:shadow-md transition-all group">
+                            <div className="flex flex-col md:flex-row gap-6 p-6">
+                                {program.imageUrl && (
+                                    <div className="w-full md:w-48 h-48 rounded-lg overflow-hidden shrink-0 border relative">
+                                        <img src={program.imageUrl} alt={program.title} className="w-full h-full object-cover" />
+                                        <Badge className="absolute top-2 left-2 bg-primary/90">#{program.order}</Badge>
+                                    </div>
+                                )}
+                                <div className="flex-1 space-y-4">
+                                    {!program.imageUrl && <div className="flex items-center gap-2"><Badge variant="outline">#{program.order}</Badge><h3 className="text-xl font-bold">{program.title}</h3></div>}
+                                    {program.imageUrl && <h3 className="text-xl font-bold">{program.title}</h3>}
+
+                                    <div className="prose prose-sm text-muted-foreground line-clamp-3" dangerouslySetInnerHTML={{ __html: program.description }} />
+
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        <Button variant="outline" size="sm" onClick={() => handleEdit(program)} className="gap-2">
+                                            <Edit className="w-4 h-4" /> Edit
+                                        </Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(program.id)} className="gap-2">
+                                            <Trash2 className="w-4 h-4" /> Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
                     ))}
                 </div>
             )}

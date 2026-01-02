@@ -141,7 +141,7 @@ npm start
 
 ## 📞 Поддержка
 
-Для вопросов и поддержки: info@slavicemigrantsministry.org
+Для вопросов и поддержки: slavicemigrantsministry@gmail.com
 
 ---
 

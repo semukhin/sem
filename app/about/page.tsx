@@ -191,7 +191,7 @@ export default function AboutPage() {
                         </div>
                         <div className="pt-4">
                             <a
-                                href="mailto:info@slavicemigrantsministry.org"
+                                href="mailto:slavicemigrantsministry@gmail.com"
                                 className="inline-flex items-center justify-center rounded-full bg-[#9d72a3] px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-[#8a6390] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                             >
                                 Email us
