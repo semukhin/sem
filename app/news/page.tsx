@@ -93,6 +93,7 @@ export default function NewsPage() {
                                     content={post.content}
                                     slug={post.slug}
                                     imageUrl={post.imageUrl}
+                                    imageUrl2={post.imageUrl2}
                                 />
                             ))}
                         </div>

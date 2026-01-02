@@ -20,9 +20,10 @@ interface NewsCardProps {
     content: string;
     slug: string;
     imageUrl?: string;
+    imageUrl2?: string;
 }
 
-export default function NewsCard({ title, date, excerpt, content, slug, imageUrl }: NewsCardProps) {
+export default function NewsCard({ title, date, excerpt, content, slug, imageUrl, imageUrl2 }: NewsCardProps) {
     return (
         <Dialog>
             <Card className="overflow-hidden flex flex-col h-full border-none shadow-soft hover:shadow-soft-md transition-shadow duration-300">
@@ -63,8 +64,8 @@ export default function NewsCard({ title, date, excerpt, content, slug, imageUrl
                 </CardFooter>
             </Card>
 
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0">
-                <div className="relative">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 gap-0 flex flex-col">
+                <div className="relative shrink-0">
                     {imageUrl && (
                         <div className="w-full h-64 sm:h-80 md:h-96 relative">
                             <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
@@ -77,7 +78,7 @@ export default function NewsCard({ title, date, excerpt, content, slug, imageUrl
                     </DialogClose>
                 </div>
 
-                <div className="p-6 sm:p-8 -mt-12 relative z-10">
+                <div className="p-6 sm:p-8 -mt-12 relative z-10 flex-1">
                     <DialogHeader className="mb-6">
                         <div className="flex items-center gap-2 text-sm text-primary font-medium mb-3">
                             <Calendar className="h-4 w-4" />
@@ -86,7 +87,13 @@ export default function NewsCard({ title, date, excerpt, content, slug, imageUrl
                         <DialogTitle className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">{title}</DialogTitle>
                     </DialogHeader>
 
-                    <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: content || excerpt }} />
+                    <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed mb-8" dangerouslySetInnerHTML={{ __html: content || excerpt }} />
+
+                    {imageUrl2 && (
+                        <div className="mt-8 rounded-lg overflow-hidden border shadow-sm">
+                            <img src={imageUrl2} alt={`${title} - Footer`} className="w-full h-auto object-cover" />
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

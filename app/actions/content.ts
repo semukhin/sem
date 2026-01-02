@@ -24,7 +24,16 @@ export async function getPosts(): Promise<NewsPost[]> {
     await ensureDataDir();
     try {
         const data = await fs.readFile(POSTS_FILE, 'utf-8');
-        return JSON.parse(data);
+        const posts: NewsPost[] = JSON.parse(data);
+
+        // Sort posts by date (newest first)
+        return posts.sort((a, b) => {
+            const parseDate = (dateStr: string) => {
+                const [day, month, year] = dateStr.split('/').map(Number);
+                return new Date(year, month - 1, day).getTime();
+            };
+            return parseDate(b.date) - parseDate(a.date);
+        });
     } catch (error) {
         // If file doesn't exist, return empty array
         return [];

@@ -35,25 +35,23 @@ export default function NewsPostClient({ slug }: NewsPostClientProps) {
 
     useEffect(() => {
         setMounted(true);
-        try {
-            // Load posts from localStorage (admin panel)
-            const savedPosts = localStorage.getItem('semPosts');
-            if (savedPosts) {
-                const posts = JSON.parse(savedPosts);
-                const foundPost = posts.find((p: NewsPost) => p.slug === slug);
+        const loadPost = async () => {
+            try {
+                const { getPosts } = await import('@/app/actions/content');
+                const posts = await getPosts();
+                const foundPost = posts.find((p) => p.slug === slug);
                 if (foundPost) {
                     setPost(foundPost);
                 } else {
-                    console.log('Post not found in local storage');
+                    console.log('Post not found on server');
                 }
-            } else {
-                console.log('No local storage data found');
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+        };
+        loadPost();
     }, [slug]);
 
     if (!mounted || loading) {
