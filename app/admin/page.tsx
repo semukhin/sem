@@ -7,30 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Plus, Trash2, Edit, Save, ArrowLeft, LogOut, Loader2, Image as ImageIcon, ExternalLink, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface NewsPost {
-    id: string;
-    title: string;
-    date: string;
-    excerpt: string;
-    content: string;
-    slug: string;
-    imageUrl?: string;
-    imageUrl2?: string;
-    videoUrl?: string;
-    externalLink?: string;
-    externalLinkTitle?: string;
-    externalLinkDescription?: string;
-    externalLinkImage?: string;
-}
-
-interface Program {
-    id: string;
-    title: string;
-    description: string;
-    imageUrl?: string;
-    order: number;
-}
+import { getPosts, savePost, deletePost, getPrograms, savePrograms as saveProgramsAction } from '@/app/actions/content';
+import { NewsPost, Program } from '@/lib/types';
 
 export default function AdminPage() {
     const router = useRouter();
@@ -42,24 +20,32 @@ export default function AdminPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [currentPost, setCurrentPost] = useState<NewsPost | null>(null);
     const [mounted, setMounted] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);
 
     // Simple authentication (in production, use proper auth)
     const ADMIN_PASSWORD = 'admin123';
 
     useEffect(() => {
         setMounted(true);
-        // Load posts from localStorage
-        const savedPosts = localStorage.getItem('semPosts');
-        if (savedPosts) {
-            setPosts(JSON.parse(savedPosts));
-        }
-        // Load programs from localStorage
-        const savedPrograms = localStorage.getItem('semPrograms');
-        if (savedPrograms) {
-            setPrograms(JSON.parse(savedPrograms));
-        }
+        loadData();
     }, []);
+
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const [fetchedPosts, fetchedPrograms] = await Promise.all([
+                getPosts(),
+                getPrograms()
+            ]);
+            setPosts(fetchedPosts);
+            setPrograms(fetchedPrograms);
+        } catch (error) {
+            console.error('Failed to load data:', error);
+            alert('Failed to load data from server');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,20 +53,6 @@ export default function AdminPage() {
             setIsAuthenticated(true);
         } else {
             alert('Неверный пароль!');
-        }
-    };
-
-    const savePosts = (newPosts: NewsPost[]) => {
-        try {
-            localStorage.setItem('semPosts', JSON.stringify(newPosts));
-            setPosts(newPosts);
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                alert('Ошибка: Превышен лимит хранилища! Уменьшите размер изображений.');
-            } else {
-                alert('Ошибка при сохранении поста');
-            }
-            console.error('Error saving posts:', error);
         }
     };
 
@@ -112,16 +84,31 @@ export default function AdminPage() {
         setIsEditing(true);
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (confirm('Вы уверены, что хотите удалить этот пост?')) {
-            const newPosts = posts.filter(p => p.id !== id);
-            savePosts(newPosts);
+            setIsLoading(true);
+            try {
+                const result = await deletePost(id);
+                if (result.success) {
+                    // Update local state
+                    setPosts(posts.filter(p => p.id !== id));
+                } else {
+                    alert('Ошибка при удалении поста');
+                }
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                alert('Ошибка при удалении поста');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentPost) return;
+
+        setIsLoading(true);
 
         // Generate slug from title if empty
         if (!currentPost.slug) {
@@ -131,19 +118,23 @@ export default function AdminPage() {
                 .replace(/(^-|-$)/g, '');
         }
 
-        const existingIndex = posts.findIndex(p => p.id === currentPost.id);
-        let newPosts;
-
-        if (existingIndex >= 0) {
-            newPosts = [...posts];
-            newPosts[existingIndex] = currentPost;
-        } else {
-            newPosts = [currentPost, ...posts];
+        try {
+            const result = await savePost(currentPost);
+            if (result.success) {
+                // Refresh list
+                const updatedPosts = await getPosts();
+                setPosts(updatedPosts);
+                setIsEditing(false);
+                setCurrentPost(null);
+            } else {
+                alert('Ошибка при сохранении поста');
+            }
+        } catch (error) {
+            console.error('Error saving post:', error);
+            alert('Ошибка при сохранении поста');
+        } finally {
+            setIsLoading(false);
         }
-
-        savePosts(newPosts);
-        setIsEditing(false);
-        setCurrentPost(null);
     };
 
     const compressImage = (file: File): Promise<string> => {
@@ -214,16 +205,20 @@ export default function AdminPage() {
     };
 
     // Callback for ProgramsManager to update programs state
-    const savePrograms = (newPrograms: Program[]) => {
+    const handleSavePrograms = async (newPrograms: Program[]) => {
+        setIsLoading(true);
         try {
-            localStorage.setItem('semPrograms', JSON.stringify(newPrograms));
-            setPrograms(newPrograms);
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                alert('Ошибка: Превышен лимит хранилища!');
+            const result = await saveProgramsAction(newPrograms);
+            if (result.success) {
+                setPrograms(newPrograms);
             } else {
                 alert('Ошибка при сохранении программы');
             }
+        } catch (error) {
+            console.error('Error saving programs:', error);
+            alert('Ошибка при сохранении программы');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -279,7 +274,7 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-bold tracking-tight">
                         {posts.find(p => p.id === currentPost.id) ? 'Edit Post' : 'Create New Post'}
                     </h1>
-                    <Button variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }}>
+                    <Button variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }} disabled={isLoading}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
                     </Button>
                 </div>
@@ -347,8 +342,11 @@ export default function AdminPage() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <Button type="submit" className="w-full md:w-auto px-8 gap-2"><Save className="w-4 h-4" /> Save Post</Button>
-                                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }} className="w-full md:w-auto">Cancel</Button>
+                                <Button type="submit" className="w-full md:w-auto px-8 gap-2" disabled={isLoading}>
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    Save Post
+                                </Button>
+                                <Button type="button" variant="outline" onClick={() => { setIsEditing(false); setCurrentPost(null); }} className="w-full md:w-auto" disabled={isLoading}>Cancel</Button>
                             </div>
                         </form>
                     </CardContent>
@@ -392,79 +390,87 @@ export default function AdminPage() {
                 </div>
 
                 <div className="min-h-[500px]">
-                    {activeTab === 'news' && (
-                        <div className="space-y-6">
-                            <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg">
-                                <h2 className="text-xl font-semibold">News Posts ({posts.length})</h2>
-                                <Button onClick={handleCreateNew} className="gap-2">
-                                    <Plus className="w-4 h-4" /> Create Post
-                                </Button>
-                            </div>
+                    {isLoading && !isEditing ? (
+                        <div className="flex justify-center items-center py-20">
+                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <>
+                            {activeTab === 'news' && (
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center bg-muted/20 p-4 rounded-lg">
+                                        <h2 className="text-xl font-semibold">News Posts ({posts.length})</h2>
+                                        <Button onClick={handleCreateNew} className="gap-2">
+                                            <Plus className="w-4 h-4" /> Create Post
+                                        </Button>
+                                    </div>
 
-                            {posts.length === 0 ? (
-                                <Card className="border-dashed">
-                                    <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-                                        <div className="bg-muted p-4 rounded-full mb-4">
-                                            <RefreshCw className="w-8 h-8 text-muted-foreground opacity-50" />
-                                        </div>
-                                        <h3 className="text-xl font-semibold mb-2">No News Posts Yet</h3>
-                                        <p className="text-muted-foreground max-w-sm mb-6">Start by creating your first news post to share updates with your community.</p>
-                                        <Button onClick={handleCreateNew}>Create Post</Button>
-                                    </CardContent>
-                                </Card>
-                            ) : (
-                                <div className="grid gap-4">
-                                    {posts.map((post) => (
-                                        <Card key={post.id} className="overflow-hidden hover:shadow-md transition-shadow group">
-                                            <div className="flex flex-col sm:flex-row">
-                                                {post.imageUrl && (
-                                                    <div className="sm:w-48 h-48 sm:h-auto overflow-hidden shrink-0 relative">
-                                                        <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
-                                                    </div>
-                                                )}
-                                                <CardContent className="flex-1 p-6 flex flex-col justify-between">
-                                                    <div>
-                                                        <div className="flex justify-between items-start mb-2">
-                                                            <h3 className="text-xl font-bold line-clamp-1">{post.title}</h3>
-                                                            <Badge variant="outline">{post.date}</Badge>
-                                                        </div>
-                                                        <p className="text-muted-foreground line-clamp-2 mb-4">{post.excerpt}</p>
-                                                    </div>
-                                                    <div className="flex justify-end gap-3 pt-4 border-t mt-2">
-                                                        <Button variant="outline" size="sm" onClick={() => handleEdit(post)} className="gap-2">
-                                                            <Edit className="w-4 h-4" /> Edit
-                                                        </Button>
-                                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(post.id)} className="gap-2">
-                                                            <Trash2 className="w-4 h-4" /> Delete
-                                                        </Button>
-                                                    </div>
-                                                </CardContent>
-                                            </div>
+                                    {posts.length === 0 ? (
+                                        <Card className="border-dashed">
+                                            <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                                                <div className="bg-muted p-4 rounded-full mb-4">
+                                                    <RefreshCw className="w-8 h-8 text-muted-foreground opacity-50" />
+                                                </div>
+                                                <h3 className="text-xl font-semibold mb-2">No News Posts Yet</h3>
+                                                <p className="text-muted-foreground max-w-sm mb-6">Start by creating your first news post to share updates with your community.</p>
+                                                <Button onClick={handleCreateNew}>Create Post</Button>
+                                            </CardContent>
                                         </Card>
-                                    ))}
+                                    ) : (
+                                        <div className="grid gap-4">
+                                            {posts.map((post) => (
+                                                <Card key={post.id} className="overflow-hidden hover:shadow-md transition-shadow group">
+                                                    <div className="flex flex-col sm:flex-row">
+                                                        {post.imageUrl && (
+                                                            <div className="sm:w-48 h-48 sm:h-auto overflow-hidden shrink-0 relative">
+                                                                <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+                                                            </div>
+                                                        )}
+                                                        <CardContent className="flex-1 p-6 flex flex-col justify-between">
+                                                            <div>
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <h3 className="text-xl font-bold line-clamp-1">{post.title}</h3>
+                                                                    <Badge variant="outline">{post.date}</Badge>
+                                                                </div>
+                                                                <p className="text-muted-foreground line-clamp-2 mb-4">{post.excerpt}</p>
+                                                            </div>
+                                                            <div className="flex justify-end gap-3 pt-4 border-t mt-2">
+                                                                <Button variant="outline" size="sm" onClick={() => handleEdit(post)} className="gap-2">
+                                                                    <Edit className="w-4 h-4" /> Edit
+                                                                </Button>
+                                                                <Button variant="destructive" size="sm" onClick={() => handleDelete(post.id)} className="gap-2">
+                                                                    <Trash2 className="w-4 h-4" /> Delete
+                                                                </Button>
+                                                            </div>
+                                                        </CardContent>
+                                                    </div>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
 
-                    {activeTab === 'programs' && (
-                        <div className="p-4 bg-background rounded-lg border shadow-sm">
-                            <ProgramsManager
-                                programs={programs}
-                                onSave={savePrograms}
-                                onImageUpload={(e, program, setProgram) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        compressImage(file).then(compressedImage => {
-                                            setProgram({ ...program, imageUrl: compressedImage });
-                                        }).catch(error => {
-                                            console.error('Error compressing image:', error);
-                                            alert('Error uploading image');
-                                        });
-                                    }
-                                }}
-                            />
-                        </div>
+                            {activeTab === 'programs' && (
+                                <div className="p-4 bg-background rounded-lg border shadow-sm">
+                                    <ProgramsManager
+                                        programs={programs}
+                                        onSave={handleSavePrograms}
+                                        onImageUpload={(e, program, setProgram) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                compressImage(file).then(compressedImage => {
+                                                    setProgram({ ...program, imageUrl: compressedImage });
+                                                }).catch(error => {
+                                                    console.error('Error compressing image:', error);
+                                                    alert('Error uploading image');
+                                                });
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

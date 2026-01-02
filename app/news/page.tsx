@@ -6,38 +6,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
-interface NewsPost {
-    id: string;
-    title: string;
-    date: string;
-    excerpt: string;
-    slug: string;
-    imageUrl?: string;
-}
+import { getPosts } from '@/app/actions/content';
+import { NewsPost } from '@/lib/types';
 
 export default function NewsPage() {
     const [allNews, setAllNews] = useState<NewsPost[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadPosts = () => {
+        const loadPosts = async () => {
             try {
-                // Load posts from localStorage
-                const savedPosts = localStorage.getItem('semPosts');
-                let userPosts: NewsPost[] = [];
-
-                if (savedPosts) {
-                    console.log('Found saved posts:', savedPosts.length, 'chars');
-                    userPosts = JSON.parse(savedPosts);
-                    console.log('Parsed posts:', userPosts);
-                } else {
-                    console.log('No saved posts found in localStorage (key: semPosts)');
-                }
-
-                // Only show user posts, no mocks
+                // Load posts from server
+                const userPosts = await getPosts();
+                // Only show user posts
                 setAllNews(userPosts);
-
             } catch (error) {
                 console.error("Failed to load news:", error);
                 setAllNews([]);
@@ -89,7 +71,7 @@ export default function NewsPage() {
                             </div>
                             <h2 className="text-2xl font-bold mb-2">No News Yet</h2>
                             <p className="text-muted-foreground max-w-md mb-8">
-                                We haven't posted any news updates yet. Please check back later or contact us directly.
+                                We haven&apos;t posted any news updates yet. Please check back later or contact us directly.
                             </p>
                             <div className="flex gap-4">
                                 <Button asChild variant="outline">
@@ -108,6 +90,7 @@ export default function NewsPage() {
                                     title={post.title}
                                     date={post.date}
                                     excerpt={post.excerpt}
+                                    content={post.content}
                                     slug={post.slug}
                                     imageUrl={post.imageUrl}
                                 />

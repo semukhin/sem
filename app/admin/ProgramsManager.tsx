@@ -7,13 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Trash2, Save, Plus, ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-interface Program {
-    id: string;
-    title: string;
-    description: string;
-    imageUrl?: string;
-    order: number;
-}
+import { Program } from '@/lib/types';
 
 interface ProgramsManagerProps {
     programs: Program[];

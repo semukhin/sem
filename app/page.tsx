@@ -6,34 +6,27 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ArrowRight, Users, Heart, BookOpen, Star, Calendar, ArrowUpRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-interface NewsPost {
-    id: string;
-    title: string;
-    date: string;
-    excerpt: string;
-    slug: string;
-    imageUrl?: string;
-}
+import { getPosts } from '@/app/actions/content';
+import { NewsPost } from '@/lib/types';
 
 export default function Home() {
     const [news, setNews] = useState<NewsPost[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load posts from localStorage (admin panel)
-        try {
-            const savedPosts = localStorage.getItem('semPosts');
-            if (savedPosts) {
-                const posts = JSON.parse(savedPosts);
+        // Load posts from server (admin panel)
+        const loadRecentPosts = async () => {
+            try {
+                const posts = await getPosts();
                 // Sort by date or ID if needed, but for now just take the first 3 (newest assumed first)
                 setNews(posts.slice(0, 3));
+            } catch (e) {
+                console.error("Failed to load news", e);
+            } finally {
+                setLoading(false);
             }
-        } catch (e) {
-            console.error("Failed to load news", e);
-        } finally {
-            setLoading(false);
-        }
+        };
+        loadRecentPosts();
     }, []);
 
     return (
@@ -142,7 +135,7 @@ export default function Home() {
                     <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
                         <div className="text-center md:text-left">
                             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Latest News & Updates</h2>
-                            <p className="text-lg text-muted-foreground">Stay connected with what's happening at SEM</p>
+                            <p className="text-lg text-muted-foreground">Stay connected with what&apos;s happening at SEM</p>
                         </div>
                         <Button asChild variant="outline" className="gap-2 group">
                             <Link href="/news">
