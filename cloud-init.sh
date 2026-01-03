@@ -1,14 +1,15 @@
-#!/bin/bash
+#!/bin/sh
 
 # --- Config ---
 REPO_URL="https://github.com/semukhin/sem.git"
 APP_DIR="/var/www/sem"
 NODE_VERSION="20.x"
-DOMAIN="_" # Change this to your domain if you have one, e.g., "example.com"
+DOMAIN="slavicemigrantsministry.org www.slavicemigrantsministry.org"
 PORT=3000
 
 # --- Logs ---
-exec 1> >(tee -a "/var/log/cloud-init-deployment.log") 2>&1
+LOG_FILE="/var/log/cloud-init-deployment.log"
+exec > "$LOG_FILE" 2>&1
 echo "Starting deployment script..."
 
 # 1. Update & Upgrade System
@@ -82,5 +83,10 @@ echo "Configuring Firewall..."
 ufw allow 'Nginx Full'
 ufw allow OpenSSH
 ufw --force enable
+
+# 11. SSL Certificate (Certbot)
+echo "Setting up SSL..."
+# Using non-interactive mode with the email from README
+certbot --nginx --non-interactive --agree-tos -m slavicemigrantsministry@gmail.com -d slavicemigrantsministry.org -d www.slavicemigrantsministry.org
 
 echo "Deployment finished! Visit your server IP to see the site."

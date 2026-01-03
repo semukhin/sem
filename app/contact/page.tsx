@@ -29,7 +29,7 @@ export default function ContactPage() {
                             <CardHeader className="bg-muted/50 pb-6 border-b">
                                 <CardTitle className="flex items-center gap-3 text-2xl">
                                     <MapPin className="text-primary w-6 h-6" />
-                                    Bellevue, WA
+                                    Everett, WA
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="pt-8 space-y-6">
@@ -38,14 +38,14 @@ export default function ContactPage() {
                                         <MapPin className="w-5 h-5 text-muted-foreground mt-1" />
                                         <div>
                                             <p className="font-semibold text-foreground">Address</p>
-                                            <p className="text-muted-foreground">123 Main Street<br />Bellevue, WA 98004</p>
+                                            <p className="text-muted-foreground">4334 Grand Ave<br />Everett, WA 98203</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-5 h-5 text-muted-foreground" />
                                         <div>
                                             <p className="font-semibold text-foreground">Phone</p>
-                                            <a href="tel:+12065551234" className="text-primary hover:underline font-medium">(206) 555-1234</a>
+                                            <a href="tel:+1 425 300 0220" className="text-primary hover:underline font-medium">(425) 300-0220</a>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -73,6 +73,13 @@ export default function ContactPage() {
                                         <div>
                                             <p className="font-semibold text-foreground">Address</p>
                                             <p className="text-muted-foreground">Praceta Dos Ferroviarios, 5<br />Faro, Portugal</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Phone className="w-5 h-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="font-semibold text-foreground">Phone</p>
+                                            <a href="tel:+351 920 444 299" className="text-primary hover:underline font-medium">+351 920 444 299</a>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
