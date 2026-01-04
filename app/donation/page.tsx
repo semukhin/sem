@@ -110,12 +110,12 @@ export default function DonationPage() {
                                     <div className="group bg-muted/50 p-4 rounded-lg flex items-center justify-between hover:bg-muted transition-colors">
                                         <div>
                                             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Phone</p>
-                                            <p className="font-medium text-lg">(206) 555-1234</p>
+                                            <p className="font-medium text-lg">(425) 300-0220</p>
                                         </div>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => copyToClipboard('(206) 555-1234', 'phone')}
+                                            onClick={() => copyToClipboard('(425) 300-0220', 'phone')}
                                             className="text-primary hover:bg-primary/10"
                                         >
                                             {copiedField === 'phone' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
@@ -139,8 +139,8 @@ export default function DonationPage() {
                                     <p className="mb-2 text-muted-foreground">Make checks payable to:</p>
                                     <div className="bg-muted p-4 rounded-lg font-mono text-sm leading-relaxed border-l-4 border-accent">
                                         <strong>Slavic Emigrants Ministry</strong><br />
-                                        123 Main Street<br />
-                                        Bellevue, WA 98004
+                                        4334 Grand Ave<br />
+                                        Everett WA 98203
                                     </div>
                                 </CardContent>
                             </Card>
